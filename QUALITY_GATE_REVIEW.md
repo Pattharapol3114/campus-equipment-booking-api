@@ -1,16 +1,23 @@
 # Quality Gate Review
 
-## Finding 1: Time Overlapping Detection Logic (Reliability & Accuracy)
-- **What was found:** การตรวจสอบการจองชนกัน หากตรวจแค่จุดเวลาเริ่มต้นเท่ากัน จะไม่ดักจับช่วงเวลาคาบเกี่ยว (Partial overlap / Enclosing overlap)
-- **How it was fixed:** ใช้ตรรกะช่วงเวลาใน SQL: `(? < endAt AND ? > startAt)` ครอบคลุมทุกเคสที่มีเวลาทับซ้อนในอุปกรณ์เดียวกัน
-- **Evidence:** ทดสอบยิง `POST /api/bookings` เวลา 10:00–12:00 น. ซ้ำซ้อนกับ 09:00–11:00 น. ของอุปกรณ์ `eq-1` ได้รับ HTTP 409 Conflict
+## Review Record
 
-## Finding 2: SQL Parameter Binding & Injection Defense (Implementation & Security)
-- **What was found:** เสี่ยงต่อ SQL Injection หากนำ Request Body มาต่อสตริง SQL
-- **How it was fixed:** ใช้ Prepared Statements พร้อม Parameter Binding `?` ผ่าน `better-sqlite3` ทั้งระบบ
-- **Evidence:** ทุกฟังก์ชันใน `src/index.ts` และ `src/db.ts` ไม่มีการ Concatenate สตริงลงใน SQL
+| Quality Gate area | Finding | Action taken | Evidence |
+|---|---|---|---|
+| Reliability | The initial query logic did not catch partial time overlaps between bookings. | Implemented overlapping condition `(? < endAt AND ? > startAt)` in SQL to prevent any double-booking for the same equipment. | Tested creating an overlapping booking (10:00–12:00 vs 09:00–11:00); correctly received `409 Conflict`. |
+| Accuracy | Parameter values could be vulnerable to SQL injection if string concatenation was used. | Used prepared statements with parameter binding (`?`) for all queries in SQLite. | Verified all queries in `src/index.ts` use `db.prepare(...).run(...)` and parameter placeholders. |
+| Reasoning / You Own It | An update (`PATCH`) operation could trigger a false conflict against the booking itself. | Added `AND id != ?` to the overlap query during updates to exclude the current booking record. | Tested updating the borrower name of an existing booking without changing time; received `200 OK` without false conflict. |
 
-## Finding 3: PATCH Self-Conflict Prevention (Reasoning / You Own It)
-- **What was found:** การแก้ไขการจองเดิม (PATCH) หากส่งช่วงเวลาเดิม ระบบจะมองว่าเวลาชนกับการจองเดิมของตัวเอง
-- **How it was fixed:** เพิ่มเงื่อนไข `AND id != ?` ในคำสั่งเช็ก Conflict เพื่อยกเว้น ID ของตนเอง
-- **Evidence:** ทดสอบยิง `PATCH` เปลี่ยนเฉพาะ `borrowerName` สำเร็จ ได้รับ HTTP 200 โดยไม่ติด 409 Conflict
+## Submission Decision
+
+- **Status:** READY
+- **Notes:** All required endpoints, validation rules, error handling, parameter binding, test cases, and documentation are complete and verified.
+```[cite: 6]
+
+*(วางเฉพาะข้อความด้านบนนี้เท่านั้น ไม่ต้องก๊อปปี้ ` ```[cite: 6] ` หรือคำสั่ง git ไปใส่ในไฟล์)*
+
+เมื่อบันทึกไฟล์เสร็จแล้ว (`Ctrl + S`) ให้รัน 2 คำสั่งนี้ใน PowerShell เพื่อบันทึกประวัติการปรับปรุงลง Git ได้เลยครับ:
+
+```powershell
+git add QUALITY_GATE_REVIEW.md
+git commit -m "docs: align quality gate review with instructor template"
