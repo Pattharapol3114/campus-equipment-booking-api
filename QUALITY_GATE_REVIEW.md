@@ -12,12 +12,3 @@
 
 - **Status:** READY
 - **Notes:** All required endpoints, validation rules, error handling, parameter binding, test cases, and documentation are complete and verified.
-```[cite: 6]
-
-*(วางเฉพาะข้อความด้านบนนี้เท่านั้น ไม่ต้องก๊อปปี้ ` ```[cite: 6] ` หรือคำสั่ง git ไปใส่ในไฟล์)*
-
-เมื่อบันทึกไฟล์เสร็จแล้ว (`Ctrl + S`) ให้รัน 2 คำสั่งนี้ใน PowerShell เพื่อบันทึกประวัติการปรับปรุงลง Git ได้เลยครับ:
-
-```powershell
-git add QUALITY_GATE_REVIEW.md
-git commit -m "docs: align quality gate review with instructor template"
